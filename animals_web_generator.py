@@ -76,9 +76,20 @@ def build_animals_output(animals_data):
     return output
 
 
+def ask_animal_name():
+    """Fragt den Nutzer nach einem Tiernamen und gibt ihn zurück."""
+    while True:
+        name = input("Enter a name of an animal: ").strip()
+        # Leere Eingaben abweisen
+        if name:
+            return name
+        print("Please enter a name.")
+
+
 def main():
-    """Holt die Daten für Fox von der API und erzeugt animals.html."""
-    animals_data = fetch_animals("Fox")
+    """Fragt einen Tiernamen ab, holt die Daten von der API und erzeugt animals.html."""
+    animal_name = ask_animal_name()
+    animals_data = fetch_animals(animal_name)
     template = read_text_file("animals_template.html")
 
     animals_output = build_animals_output(animals_data)
