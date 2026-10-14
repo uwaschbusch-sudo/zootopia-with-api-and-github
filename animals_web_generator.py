@@ -1,14 +1,28 @@
-# Bonus - Python Filtering
+import os
 
-import json
+import requests
+from dotenv import load_dotenv
 
 PLACEHOLDER = "__REPLACE_ANIMALS_INFO__"
+API_URL = "https://api.api-ninjas.com/v1/animals"
 
 
-def load_data(file_path):
-    """Lädt eine JSON-Datei und gibt deren Inhalt zurück."""
-    with open(file_path, "r", encoding="utf-8") as handle:
-        return json.load(handle)
+def fetch_animals(name):
+    """Holt die Tierdaten zum Namen von der API und gibt eine Liste zurück."""
+    # Key aus der .env-Datei laden
+    load_dotenv()
+    api_key = os.getenv("API_KEY")
+    if not api_key:
+        raise SystemExit("API_KEY fehlt in der .env-Datei.")
+    response = requests.get(
+        API_URL,
+        params={"name": name},
+        headers={"X-Api-Key": api_key},
+        timeout=10,
+    )
+    # Bei HTTP-Fehlern eine Ausnahme auslösen
+    response.raise_for_status()
+    return response.json()
 
 
 def read_text_file(file_path):
@@ -21,38 +35,6 @@ def write_text_file(file_path, content):
     """Schreibt den übergebenen String in eine Textdatei."""
     with open(file_path, "w", encoding="utf-8") as handle:
         handle.write(content)
-
-
-def get_available_skin_types(animals_data):
-    """Ermittelt alle im Datensatz vorkommenden skin_type-Werte."""
-    skin_types = set()
-    for animal in animals_data:
-        skin_type = animal.get("characteristics", {}).get("skin_type")
-        if skin_type:
-            skin_types.add(skin_type)
-    return sorted(skin_types)
-
-
-def ask_user_for_skin_type(available_skin_types):
-    """Zeigt die verfügbaren skin_type-Werte an und fragt den Nutzer."""
-    print("Verfügbare Skin Types:")
-    for skin_type in available_skin_types:
-        print(f"- {skin_type}")
-
-    while True:
-        chosen_skin_type = input("Bitte einen Skin Type eingeben: ").strip()
-        if chosen_skin_type in available_skin_types:
-            return chosen_skin_type
-        print("Ungültige Eingabe, bitte einen Wert aus der Liste wählen.")
-
-
-def filter_animals_by_skin_type(animals_data, skin_type):
-    """Gibt nur die Tiere zurück, deren skin_type exakt übereinstimmt."""
-    return [
-        animal
-        for animal in animals_data
-        if animal.get("characteristics", {}).get("skin_type") == skin_type
-    ]
 
 
 def serialize_animal(animal):
@@ -95,18 +77,15 @@ def build_animals_output(animals_data):
 
 
 def main():
-    """Fragt einen Skin Type ab und erzeugt animals.html nur dafür."""
-    animals_data = load_data("animals_data.json")
+    """Holt die Daten für Fox von der API und erzeugt animals.html."""
+    animals_data = fetch_animals("Fox")
     template = read_text_file("animals_template.html")
 
-    available_skin_types = get_available_skin_types(animals_data)
-    chosen_skin_type = ask_user_for_skin_type(available_skin_types)
-    filtered_animals = filter_animals_by_skin_type(animals_data, chosen_skin_type)
-
-    animals_output = build_animals_output(filtered_animals)
+    animals_output = build_animals_output(animals_data)
     html_content = template.replace(PLACEHOLDER, animals_output)
 
     write_text_file("animals.html", html_content)
+    print("Website was successfully generated to the file animals.html.")
 
 
 if __name__ == "__main__":
