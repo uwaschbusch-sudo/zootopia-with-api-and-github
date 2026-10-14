@@ -1,3 +1,4 @@
+import html
 import os
 
 import requests
@@ -76,6 +77,13 @@ def build_animals_output(animals_data):
     return output
 
 
+def build_not_found_output(animal_name):
+    """Erzeugt die HTML-Meldung für ein nicht gefundenes Tier."""
+    # Eingabe maskieren, damit kein fremdes HTML in die Seite gelangt
+    safe_name = html.escape(animal_name, quote=False)
+    return f'<h2 style="text-align: center;">The animal "{safe_name}" doesn\'t exist.</h2>\n'
+
+
 def ask_animal_name():
     """Fragt den Nutzer nach einem Tiernamen und gibt ihn zurück."""
     while True:
@@ -92,7 +100,11 @@ def main():
     animals_data = fetch_animals(animal_name)
     template = read_text_file("animals_template.html")
 
-    animals_output = build_animals_output(animals_data)
+    # Leere Antwort der API bedeutet: Tier existiert nicht
+    if animals_data:
+        animals_output = build_animals_output(animals_data)
+    else:
+        animals_output = build_not_found_output(animal_name)
     html_content = template.replace(PLACEHOLDER, animals_output)
 
     write_text_file("animals.html", html_content)
