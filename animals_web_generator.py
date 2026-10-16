@@ -1,29 +1,8 @@
 import html
-import os
 
-import requests
-from dotenv import load_dotenv
+import data_fetcher
 
 PLACEHOLDER = "__REPLACE_ANIMALS_INFO__"
-API_URL = "https://api.api-ninjas.com/v1/animals"
-
-
-def fetch_animals(name):
-    """Holt die Tierdaten zum Namen von der API und gibt eine Liste zurück."""
-    # Key aus der .env-Datei laden
-    load_dotenv()
-    api_key = os.getenv("API_KEY")
-    if not api_key:
-        raise SystemExit("API_KEY fehlt in der .env-Datei.")
-    response = requests.get(
-        API_URL,
-        params={"name": name},
-        headers={"X-Api-Key": api_key},
-        timeout=10,
-    )
-    # Bei HTTP-Fehlern eine Ausnahme auslösen
-    response.raise_for_status()
-    return response.json()
 
 
 def read_text_file(file_path):
@@ -97,7 +76,7 @@ def ask_animal_name():
 def main():
     """Fragt einen Tiernamen ab, holt die Daten von der API und erzeugt animals.html."""
     animal_name = ask_animal_name()
-    animals_data = fetch_animals(animal_name)
+    animals_data = data_fetcher.fetch_data(animal_name)
     template = read_text_file("animals_template.html")
 
     # Leere Antwort der API bedeutet: Tier existiert nicht
